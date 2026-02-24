@@ -5,17 +5,22 @@ import org.openqa.selenium.WebDriver;
 
 public class OrderDetailsForm extends BasePage {
 
-    private By orderButton = By.xpath("//button[contains(text(), 'Заказать')]");
+    private By commentField = By.xpath("//textarea[contains(@placeholder, 'Комментарий')]");
+    private By orderButton = By.xpath("//button[contains(text(), 'Заказать') and not(contains(@class, 'Header'))]");
 
     public OrderDetailsForm(WebDriver driver) {
         super(driver);
     }
 
     public void addComment(String comment) {
-        // Пропускаем, если не нашли — не критично
+        try {
+            waitForElementClickable(commentField, 10).sendKeys(comment);
+        } catch (Exception e) {
+            // Если поле комментария не найдено — пропускаем (не критично)
+        }
     }
 
     public void placeOrder() {
-        findElement(orderButton).click();
+        waitForElementClickable(orderButton, 10).click();
     }
 }

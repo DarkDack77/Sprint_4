@@ -18,21 +18,30 @@ public class CustomerDataForm extends BasePage {
     }
 
     public void fillCustomerData(String name, String surname, String address, String metro, String phone) {
-        findElement(nameField).clear(); findElement(nameField).sendKeys(name);
-        findElement(surnameField).clear(); findElement(surnameField).sendKeys(surname);
-        findElement(addressField).clear(); findElement(addressField).sendKeys(address);
+        waitForElementClickable(nameField, 10).clear();
+        waitForElementClickable(nameField, 10).sendKeys(name);
 
-        WebElement metroInput = findElement(metroField);
-        metroInput.clear(); metroInput.sendKeys(metro);
+        waitForElementClickable(surnameField, 10).clear();
+        waitForElementClickable(surnameField, 10).sendKeys(surname);
 
-        try { Thread.sleep(500); } catch (InterruptedException e) {}
-        try { driver.findElement(By.cssSelector(".select-search__option")).click(); } catch (Exception e) {}
+        waitForElementClickable(addressField, 10).clear();
+        waitForElementClickable(addressField, 10).sendKeys(address);
 
-        findElement(phoneField).clear(); findElement(phoneField).sendKeys(phone);
+        WebElement metroInput = waitForElementClickable(metroField, 10);
+        metroInput.clear();
+        metroInput.sendKeys(metro);
+
+        // Ждём появления подсказки метро и кликаем по первой
+        waitForElementClickable(By.cssSelector(".select-search__option"), 5).click();
+
+        waitForElementClickable(phoneField, 10).clear();
+        waitForElementClickable(phoneField, 10).sendKeys(phone);
     }
 
     public void goToNextStep() {
-        findElement(nextButton).click();
-        try { Thread.sleep(3000); } catch (InterruptedException e) {}
+        waitForElementClickable(nextButton, 10).click();
+
+        // Ждём появления кнопки "Заказать" второго шага
+        waitForElementPresent(By.xpath("//button[contains(text(), 'Заказать') and not(contains(@class, 'Header'))]"), 10);
     }
 }

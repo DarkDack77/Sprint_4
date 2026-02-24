@@ -16,41 +16,43 @@ public class MainPage extends BasePage {
     }
 
     public void dismissCookieBanner() {
-        try { findElement(cookieButton).click(); } catch (Exception e) {}
+        try {
+            waitForElementClickable(cookieButton, 10).click();
+        } catch (Exception e) {}
     }
 
-    public void clickTopOrderButton() { findElement(topOrderButton).click(); }
-    public void clickBottomOrderButton() { findElement(bottomOrderButton).click(); }
+    public void clickTopOrderButton() {
+        waitForElementClickable(topOrderButton, 10).click();
+    }
 
-    // ✅ ИСПРАВЛЕНИЕ: скрываем картинку + скролл + JS-клик
+    public void clickBottomOrderButton() {
+        waitForElementClickable(bottomOrderButton, 10).click();
+    }
+
+    // ✅ ИСПРАВЛЕНО: скрываем картинку + явные ожидания + клик через JS
     public void clickFaqQuestion(String questionText) {
-        // 1. Скрываем картинку самоката (главная проблема!)
-        try {
-            ((JavascriptExecutor) driver).executeScript(
-                    "var img = document.querySelector('img[src*=\"scooter.png\"]'); if(img) img.style.display='none';"
-            );
-        } catch (Exception e) {}
+        // 1. Скрываем картинку самоката
+        ((JavascriptExecutor) driver).executeScript(
+                "var img = document.querySelector('img[src*=\"scooter.png\"]'); if(img) img.remove();"
+        );
 
         // 2. Находим вопрос
         String xpath = String.format("//div[contains(@class, 'accordion__button') and contains(text(), '%s')]", questionText);
-        WebElement question = findElement(By.xpath(xpath));
+        WebElement question = waitForElementClickable(By.xpath(xpath), 10);
 
         // 3. Скроллим к вопросу
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", question);
-        try { Thread.sleep(500); } catch (InterruptedException e) {}
 
-        // 4. Кликаем через JavaScript (обходит картинку)
+        // 4. Кликаем через JavaScript
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", question);
-        try { Thread.sleep(300); } catch (InterruptedException e) {}
     }
 
-    // ✅ Проверка ответа
+    // ✅ ИСПРАВЛЕНО: проверка ответа с явным ожиданием
     public boolean isAnswerVisible(String expectedAnswer) {
+        String xpath = String.format("//*[contains(text(), '%s')]", expectedAnswer);
         try {
-            try { Thread.sleep(300); } catch (InterruptedException e) {}
-            String xpath = String.format("//*[contains(text(), '%s')]", expectedAnswer);
-            WebElement answer = findElement(By.xpath(xpath));
-            return answer.isDisplayed();
+            waitForElementVisible(By.xpath(xpath), 10);
+            return true;
         } catch (Exception e) {
             return false;
         }
