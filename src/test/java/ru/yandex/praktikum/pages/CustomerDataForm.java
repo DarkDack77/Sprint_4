@@ -18,30 +18,24 @@ public class CustomerDataForm extends BasePage {
     }
 
     public void fillCustomerData(String name, String surname, String address, String metro, String phone) {
-        waitForElementClickable(nameField, 10).clear();
-        waitForElementClickable(nameField, 10).sendKeys(name);
+        findElement(nameField).clear(); findElement(nameField).sendKeys(name);
+        findElement(surnameField).clear(); findElement(surnameField).sendKeys(surname);
+        findElement(addressField).clear(); findElement(addressField).sendKeys(address);
 
-        waitForElementClickable(surnameField, 10).clear();
-        waitForElementClickable(surnameField, 10).sendKeys(surname);
+        WebElement metroInput = findElement(metroField);
+        metroInput.clear(); metroInput.sendKeys(metro);
+        try {
+            Thread.sleep(500);
+            driver.findElement(By.cssSelector(".select-search__option")).click();
+        } catch (Exception e) {
+            metroInput.sendKeys(org.openqa.selenium.Keys.ENTER);
+        }
 
-        waitForElementClickable(addressField, 10).clear();
-        waitForElementClickable(addressField, 10).sendKeys(address);
-
-        WebElement metroInput = waitForElementClickable(metroField, 10);
-        metroInput.clear();
-        metroInput.sendKeys(metro);
-
-        // Ждём появления подсказки метро и кликаем по первой
-        waitForElementClickable(By.cssSelector(".select-search__option"), 5).click();
-
-        waitForElementClickable(phoneField, 10).clear();
-        waitForElementClickable(phoneField, 10).sendKeys(phone);
+        findElement(phoneField).clear(); findElement(phoneField).sendKeys(phone);
     }
 
     public void goToNextStep() {
-        waitForElementClickable(nextButton, 10).click();
-
-        // Ждём появления кнопки "Заказать" второго шага
-        waitForElementPresent(By.xpath("//button[contains(text(), 'Заказать') and not(contains(@class, 'Header'))]"), 10);
+        findElement(nextButton).click();
+        try { Thread.sleep(1000); } catch (InterruptedException e) {}
     }
 }

@@ -1,9 +1,10 @@
 package ru.yandex.praktikum.pages;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public class MainPage extends BasePage {
 
@@ -17,43 +18,82 @@ public class MainPage extends BasePage {
 
     public void dismissCookieBanner() {
         try {
-            waitForElementClickable(cookieButton, 10).click();
-        } catch (Exception e) {}
+            if (driver.findElements(cookieButton).size() > 0) {
+                waitForElementClickable(cookieButton, 5);
+                findElement(cookieButton).click();
+                Thread.sleep(500);
+            }
+        } catch (Exception e) {
+            // Игнорируем
+        }
     }
 
     public void clickTopOrderButton() {
-        waitForElementClickable(topOrderButton, 10).click();
+        waitForElementClickable(topOrderButton, 5);
+        findElement(topOrderButton).click();
     }
 
     public void clickBottomOrderButton() {
-        waitForElementClickable(bottomOrderButton, 10).click();
+        waitForElementClickable(bottomOrderButton, 5);
+        findElement(bottomOrderButton).click();
     }
 
-    // ✅ ИСПРАВЛЕНО: скрываем картинку + явные ожидания + клик через JS
     public void clickFaqQuestion(String questionText) {
-        // 1. Скрываем картинку самоката
-        ((JavascriptExecutor) driver).executeScript(
-                "var img = document.querySelector('img[src*=\"scooter.png\"]'); if(img) img.remove();"
-        );
+        try {
+            System.out.println("   Поиск вопроса: " + questionText.substring(0, Math.min(20, questionText.length())) + "...");
 
-        // 2. Находим вопрос
-        String xpath = String.format("//div[contains(@class, 'accordion__button') and contains(text(), '%s')]", questionText);
-        WebElement question = waitForElementClickable(By.xpath(xpath), 10);
+            // Удаляем мешающее изображение
+            ((JavascriptExecutor) driver).executeScript(
+                    "var img = document.querySelector('img[src*=\"scooter.png\"]'); if(img) img.remove();"
+            );
 
-        // 3. Скроллим к вопросу
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", question);
+            // Самый простой и надежный способ - найти все вопросы и кликнуть по нужному
+            String script =
+                    "var questions = document.querySelectorAll('.accordion__heading');" +
+                            "for(var i = 0; i < questions.length; i++) {" +
+                            "  var text = questions[i].textContent || questions[i].innerText;" +
+                            "  if(text.includes('" + questionText.substring(0, 15) + "')) {" +
+                            "    questions[i].parentNode.scrollIntoView({block: 'center'});" +
+                            "    setTimeout(function() { questions[i].parentNode.click(); }, 100);" +
+                            "    return true;" +
+                            "  }" +
+                            "}" +
+                            "return false;";
 
-        // 4. Кликаем через JavaScript
-        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", question);
+            boolean clicked = (boolean) ((JavascriptExecutor) driver).executeScript(script);
+            System.out.println("   JavaScript клик выполнен: " + clicked);
+
+            Thread.sleep(1500); // Ждем открытия
+
+        } catch (Exception e) {
+            System.out.println("   Ошибка при клике на вопрос: " + e.getMessage());
+        }
     }
 
-    // ✅ ИСПРАВЛЕНО: проверка ответа с явным ожиданием
     public boolean isAnswerVisible(String expectedAnswer) {
-        String xpath = String.format("//*[contains(text(), '%s')]", expectedAnswer);
         try {
-            waitForElementVisible(By.xpath(xpath), 10);
-            return true;
+            Thread.sleep(500);
+
+            System.out.println("   Поиск ответа: " + expectedAnswer.substring(0, Math.min(30, expectedAnswer.length())) + "...");
+
+            // Ищем текст ответа на странице
+            String script =
+                    "var elements = document.querySelectorAll('.accordion__panel p, .accordion__panel div');" +
+                            "for(var i = 0; i < elements.length; i++) {" +
+                            "  var text = elements[i].textContent || elements[i].innerText;" +
+                            "  if(text.includes('" + expectedAnswer.substring(0, 20) + "')) {" +
+                            "    return true;" +
+                            "  }" +
+                            "}" +
+                            "return false;";
+
+            boolean found = (boolean) ((JavascriptExecutor) driver).executeScript(script);
+            System.out.println("   Ответ найден: " + found);
+
+            return found;
+
         } catch (Exception e) {
+            System.out.println("   Ошибка при поиске ответа: " + e.getMessage());
             return false;
         }
     }

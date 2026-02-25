@@ -1,15 +1,9 @@
 package ru.yandex.praktikum.tests;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
+import ru.yandex.praktikum.data.FaqData;
 import ru.yandex.praktikum.pages.MainPage;
 
 import java.util.Arrays;
@@ -18,58 +12,40 @@ import java.util.Collection;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
-public class FaqTest {
+public class FaqTest extends BaseTest {
 
-    private WebDriver driver;
-    private MainPage mainPage;
-    private final String question;
-    private final String expectedAnswer;
+    private final FaqData faqData;
 
-    public FaqTest(String question, String expectedAnswer) {
-        this.question = question;
-        this.expectedAnswer = expectedAnswer;
+    public FaqTest(FaqData faqData) {
+        this.faqData = faqData;
     }
 
     @Parameterized.Parameters
-    public static Collection<Object[]> getFaqData() {
-        return Arrays.asList(new Object[][]{
-                {"Сколько это стоит? И как оплатить?", "Сутки — 400 рублей. Оплата курьеру — наличными или картой."},
-                {"Хочу сразу несколько самокатов! Так можно?", "Пока что у нас так: один заказ — один самокат."},
-                {"Как рассчитывается время аренды?", "Допустим, вы оформляете заказ на 8 мая."},
-                {"Можно ли заказать самокат прямо на сегодня?", "Только начиная с завтрашнего дня."},
-                {"Можно ли продлить заказ или вернуть самокат раньше?", "Пока что нет! Но если что-то срочное — всегда можно позвонить в поддержку по красивому номеру 1010."},
-                {"Вы привозите зарядку вместе с самокатом?", "Самокат приезжает к вам с полной зарядкой."},
-                {"Можно ли отменить заказ?", "Да, пока самокат не привезли."},
-                {"Я жизу за МКАДом, привезёте?", "Да, обязательно. Всем самокатов!"}
-        });
-    }
-
-    @Before
-    public void setUp() {
-        WebDriverManager.firefoxdriver().setup();
-        FirefoxOptions options = new FirefoxOptions();
-        driver = new FirefoxDriver(options);
-        driver.get("https://qa-scooter.praktikum-services.ru/");
-        mainPage = new MainPage(driver);
-        mainPage.dismissCookieBanner();
+    public static Collection<FaqData> getFaqData() {
+        return Arrays.asList(
+                new FaqData("Сколько это стоит? И как оплатить?", "Сутки — 400 рублей. Оплата курьеру — наличными или картой."),
+                new FaqData("Хочу сразу несколько самокатов! Так можно?", "Пока что у нас так: один заказ — один самокат."),
+                new FaqData("Как рассчитывается время аренды?", "Допустим, вы оформляете заказ на 8 мая. Мы привозим самокат 8 мая в течение дня. Отсчёт времени аренды начинается с момента, когда вы оплатите заказ курьеру. Если мы привезли самокат 8 мая в 12:00, а вы оплатили его в 13:00, аренда начнёт действовать с 13:00."),
+                new FaqData("Можно ли заказать самокат прямо на сегодня?", "Только начиная с завтрашнего дня. Но скоро станем расторопнее."),
+                new FaqData("Можно ли продлить заказ или вернуть самокат раньше?", "Пока что нет! Но если что-то срочное — всегда можно позвонить в поддержку."),
+                new FaqData("Вы привозите зарядку вместе с самокатом?", "Самокат приезжает к вам с полной зарядкой. Зарядку не нужно возить — самокат заряжается от обычной розетки."),
+                new FaqData("Можно ли отменить заказ?", "Да, пока самокат не привезли. Штрафа не будет, объяснительной записки тоже не попросим. Все свои."),
+                new FaqData("Я живу за МКАДом, привезёте?", "Да, обязательно. Всем самокатов!")
+        );
     }
 
     @Test
     public void faqQuestionOpensCorrectAnswer() {
-        mainPage.clickFaqQuestion(question);
+        MainPage mainPage = new MainPage(driver);
+        mainPage.dismissCookieBanner();
 
-        try { Thread.sleep(2000); } catch (InterruptedException e) {}
+        // В методе clickFaqQuestion уже есть необходимые ожидания
+        mainPage.clickFaqQuestion(faqData.getQuestion());
 
-        String pageText = driver.getPageSource();
-        boolean hasAnswer = pageText.contains(expectedAnswer);
+        // В методе isAnswerVisible уже есть необходимые ожидания
+        boolean isVisible = mainPage.isAnswerVisible(faqData.getExpectedAnswer());
 
-        assertTrue("Ответ не найден для вопроса: " + question, hasAnswer);
-    }
-
-    @After
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
+        assertTrue("Ответ не соответствует ожидаемому для вопроса: " + faqData.getQuestion(),
+                mainPage.isAnswerVisible(faqData.getExpectedAnswer()));
     }
 }
