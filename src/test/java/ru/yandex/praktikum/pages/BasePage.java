@@ -9,11 +9,14 @@ import java.time.Duration;
 
 public class BasePage {
     protected WebDriver driver;
-    protected WebDriverWait wait;
 
+    // Конструктор с параметром WebDriver
     public BasePage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    }
+
+    protected WebElement findElement(By locator) {
+        return driver.findElement(locator);
     }
 
     protected WebElement waitForElementVisible(By locator, int seconds) {
@@ -24,14 +27,5 @@ public class BasePage {
     protected WebElement waitForElementClickable(By locator, int seconds) {
         return new WebDriverWait(driver, Duration.ofSeconds(seconds))
                 .until(ExpectedConditions.elementToBeClickable(locator));
-    }
-
-    protected WebElement waitForElementPresent(By locator, int seconds) {
-        return new WebDriverWait(driver, Duration.ofSeconds(seconds))
-                .until(ExpectedConditions.presenceOfElementLocated(locator));
-    }
-
-    protected WebElement findElement(By locator) {
-        return driver.findElement(locator);
     }
 }

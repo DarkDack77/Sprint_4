@@ -5,10 +5,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import ru.yandex.praktikum.data.FaqData;
 import ru.yandex.praktikum.pages.MainPage;
-
 import java.util.Arrays;
 import java.util.Collection;
-
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -36,16 +34,20 @@ public class FaqTest extends BaseTest {
 
     @Test
     public void faqQuestionOpensCorrectAnswer() {
+        System.out.println("\n=== ТЕСТ ДЛЯ ВОПРОСА: " + faqData.getQuestion() + " ===");
+        System.out.println("   Ожидаемый ответ: " + faqData.getExpectedAnswer().substring(0, Math.min(50, faqData.getExpectedAnswer().length())) + "...\n");
+
         MainPage mainPage = new MainPage(driver);
         mainPage.dismissCookieBanner();
 
-        // В методе clickFaqQuestion уже есть необходимые ожидания
         mainPage.clickFaqQuestion(faqData.getQuestion());
 
-        // В методе isAnswerVisible уже есть необходимые ожидания
+        try { Thread.sleep(1500); } catch (InterruptedException e) {}
+
         boolean isVisible = mainPage.isAnswerVisible(faqData.getExpectedAnswer());
 
-        assertTrue("Ответ не соответствует ожидаемому для вопроса: " + faqData.getQuestion(),
-                mainPage.isAnswerVisible(faqData.getExpectedAnswer()));
+        System.out.println("\n=== РЕЗУЛЬТАТ: " + (isVisible ? "УСПЕХ" : "НЕУДАЧА") + " ===\n");
+
+        assertTrue("Ответ не появился для вопроса: " + faqData.getQuestion(), isVisible);
     }
 }
