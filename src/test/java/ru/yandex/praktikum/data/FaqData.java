@@ -1,16 +1,16 @@
 package ru.yandex.praktikum.data;
 
 public class FaqData {
-    private final String question;
+    private final int index;
     private final String expectedAnswer;
 
-    public FaqData(String question, String expectedAnswer) {
-        this.question = question;
+    public FaqData(int index, String expectedAnswer) {
+        this.index = index;
         this.expectedAnswer = expectedAnswer;
     }
 
-    public String getQuestion() {
-        return question;
+    public int getIndex() {
+        return index;
     }
 
     public String getExpectedAnswer() {
