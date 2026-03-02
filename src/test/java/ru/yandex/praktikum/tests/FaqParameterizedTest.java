@@ -4,16 +4,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import ru.yandex.praktikum.BaseTest;           // Импорт из корневого пакета
-import ru.yandex.praktikum.pages.MainPage;     // Импорт из pages
+import org.openqa.selenium.By;  // Добавьте этот импорт
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import ru.yandex.praktikum.pages.MainPage;
+import java.time.Duration;
 
 @RunWith(Parameterized.class)
-public class FaqTest extends BaseTest {
-
+public class FaqParameterizedTest extends BaseTest {
     private final int index;
     private final String expected;
 
-    public FaqTest(int index, String expected) {
+    public FaqParameterizedTest(int index, String expected) {
         this.index = index;
         this.expected = expected;
     }
@@ -34,11 +36,22 @@ public class FaqTest extends BaseTest {
 
     @Test
     public void checkFaqAnswers() {
+        System.out.println("\n=== ТЕСТ ВОПРОСА " + index + " ===");
+        System.out.println("   Ожидаемый ответ: " + expected.substring(0, Math.min(30, expected.length())) + "...");
+
         MainPage mainPage = new MainPage(driver);
         mainPage.openPage();
         mainPage.acceptCookies();
         mainPage.clickFaqQuestion(index);
-        String actualAnswer = mainPage.getFaqAnswerText(index);
-        Assert.assertEquals("Ответ не соответствует вопросу", expected, actualAnswer);
+
+        // Явное ожидание появления ответа
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        By answerLocator = By.id(String.format("accordion__panel-%d", index));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(answerLocator));
+
+        String actual = mainPage.getFaqAnswerText(index);
+
+        System.out.println("=== РЕЗУЛЬТАТ: " + (expected.equals(actual) ? "УСПЕХ" : "НЕУДАЧА") + " ===\n");
+        Assert.assertEquals("Текст ответа не совпадает с ожидаемым для вопроса " + index, expected, actual);
     }
 }

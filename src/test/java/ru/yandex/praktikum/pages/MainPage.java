@@ -1,6 +1,7 @@
 package ru.yandex.praktikum.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -11,9 +12,11 @@ public class MainPage {
 
     private final WebDriver driver;
     private final WebDriverWait wait;
-    private final String url = "https://qa-scooter.praktikum-services.ru/";
 
-    private final By cookieButton = By.id("rcc-confirm-button");
+    private static final By COOKIE_BUTTON = By.id("rcc-confirm-button");
+    private static final String FAQ_QUESTION_ID = "accordion__heading-%d";
+    private static final String FAQ_ANSWER_ID = "accordion__panel-%d";
+    private static final String PAGE_URL = "https://qa-scooter.praktikum-services.ru/";
 
     public MainPage(WebDriver driver) {
         this.driver = driver;
@@ -21,23 +24,34 @@ public class MainPage {
     }
 
     public void openPage() {
-        driver.get(url);
+        driver.get(PAGE_URL);
     }
 
     public void acceptCookies() {
-        WebElement cookieBtn = wait.until(ExpectedConditions.elementToBeClickable(cookieButton));
-        cookieBtn.click();
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(COOKIE_BUTTON)).click();
+            System.out.println("   ✓ Куки приняты");
+        } catch (Exception e) {
+            System.out.println("   Баннер куки не найден");
+        }
     }
 
     public void clickFaqQuestion(int index) {
-        By questionLocator = By.id("accordion__heading-" + index);
-        WebElement question = wait.until(ExpectedConditions.elementToBeClickable(questionLocator));
-        question.click();
+        By faqQuestions = By.id(String.format(FAQ_QUESTION_ID, index));
+        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(faqQuestions));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
+        wait.until(ExpectedConditions.elementToBeClickable(element)).click();
+        System.out.println("   ✓ Вопрос " + index + " открыт");
+
+        // НЕ используем Thread.sleep здесь
     }
 
     public String getFaqAnswerText(int index) {
-        By answerLocator = By.id("accordion__panel-" + index);
-        WebElement answer = wait.until(ExpectedConditions.visibilityOfElementLocated(answerLocator));
-        return answer.getText();
+        By faqAnswers = By.id(String.format(FAQ_ANSWER_ID, index));
+        // Ждем видимости ответа перед получением текста
+        WebElement answerElement = wait.until(ExpectedConditions.visibilityOfElementLocated(faqAnswers));
+        String text = answerElement.getText();
+        System.out.println("   Текст ответа: " + text.substring(0, Math.min(30, text.length())) + "...");
+        return text;
     }
 }
