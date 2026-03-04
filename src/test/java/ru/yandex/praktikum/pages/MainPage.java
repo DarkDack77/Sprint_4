@@ -1,57 +1,60 @@
 package ru.yandex.praktikum.pages;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import java.time.Duration;
 
-public class MainPage {
+public class MainPage extends BasePage {
 
-    private final WebDriver driver;
-    private final WebDriverWait wait;
+    private static final String URL = "https://qa-scooter.praktikum-services.ru/";
 
-    private static final By COOKIE_BUTTON = By.id("rcc-confirm-button");
-    private static final String FAQ_QUESTION_ID = "accordion__heading-%d";
-    private static final String FAQ_ANSWER_ID = "accordion__panel-%d";
-    private static final String PAGE_URL = "https://qa-scooter.praktikum-services.ru/";
+    // cookies (по твоим замечаниям у тебя было и By.id и xpath — оставим более стабильный id)
+    private final By cookieButton = By.id("rcc-confirm-button");
 
-    public MainPage(WebDriver driver) {
-        this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    // Кнопки "Заказать" на главной
+    // Верхняя: первая подходящая кнопка на странице
+    private final By orderSmallButton = By.xpath("(//button[contains(@class,'Button_Button__ra12g') and normalize-space()='Заказать'])[1]");
+    // Нижняя: "Заказать" в блоке Home_FinishButton
+    private final By orderBigButton = By.xpath("//div[contains(@class,'Home_FinishButton')]//button[normalize-space()='Заказать']");
+
+    // FAQ: клик по вопросу по тексту
+    private By faqQuestionByText(String questionText) {
+        return By.xpath("//div[contains(@class,'accordion__heading')][normalize-space()='" + questionText + "']");
     }
 
-    public void openPage() {
-        driver.get(PAGE_URL);
+    // Ответ — берем панель, которая идет сразу после heading
+    private By faqAnswerForQuestionText(String questionText) {
+        return By.xpath("//div[contains(@class,'accordion__heading')][normalize-space()='" + questionText + "']/following-sibling::div[contains(@class,'accordion__panel')]");
+    }
+
+    public MainPage(WebDriver driver) {
+        super(driver);
+    }
+
+    public void open() {
+        driver.get(URL);
     }
 
     public void acceptCookies() {
-        try {
-            wait.until(ExpectedConditions.elementToBeClickable(COOKIE_BUTTON)).click();
-            System.out.println("   ✓ Куки приняты");
-        } catch (Exception e) {
-            System.out.println("   Баннер куки не найден");
-        }
+        click(cookieButton);
     }
 
-    public void clickFaqQuestion(int index) {
-        By faqQuestions = By.id(String.format(FAQ_QUESTION_ID, index));
-        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(faqQuestions));
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
-        wait.until(ExpectedConditions.elementToBeClickable(element)).click();
-        System.out.println("   ✓ Вопрос " + index + " открыт");
-
-        // НЕ используем Thread.sleep здесь
+    public void clickOrderSmall() {
+        scrollTo(orderSmallButton);
+        click(orderSmallButton);
     }
 
-    public String getFaqAnswerText(int index) {
-        By faqAnswers = By.id(String.format(FAQ_ANSWER_ID, index));
-        // Ждем видимости ответа перед получением текста
-        WebElement answerElement = wait.until(ExpectedConditions.visibilityOfElementLocated(faqAnswers));
-        String text = answerElement.getText();
-        System.out.println("   Текст ответа: " + text.substring(0, Math.min(30, text.length())) + "...");
-        return text;
+    public void clickOrderBig() {
+        scrollTo(orderBigButton);
+        click(orderBigButton);
+    }
+
+    public void clickFaqQuestion(String questionText) {
+        By q = faqQuestionByText(questionText);
+        scrollTo(q);
+        click(q);
+    }
+
+    public String getFaqAnswerText(String questionText) {
+        return waitVisible(faqAnswerForQuestionText(questionText)).getText();
     }
 }
